@@ -13,6 +13,8 @@ Instructions: The goal of your project is to predict the manner in which they di
 
 The assignment starts by loading the train and test data sets
 ```{r}
+library("caret")
+library("ggplot2")
 #fileUrl <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
 #download.file(fileUrl, destfile = "C:\\Personal\\Coursera\\Machine learning\\project\\training.csv")
 
@@ -28,7 +30,7 @@ testing <- read.csv("C:\\Personal\\Coursera\\Machine learning\\project\\test.csv
 
 
 By running the summary command on the training data set it is apparent that many of the columns in both data sets contain high number of NA values. Clean the data by removing the relevant columns from the training and testing sets.
-```{r, echo=FALSE}
+```{r}
 #summary(training)
 NAs <- apply(training, 2, function(x) {
   sum(is.na(x))
@@ -39,22 +41,21 @@ testing <- testing[, which(NAs == 0)]
 
 Once the data is clean the next step would be to split the training data set to sub testing and training sets to improve the performance of the random forest prediction model. 
 
-```{r, echo=FALSE}
-library("caret")
-inTrain <- createDataPartition(y=training$classe,p=0.30, list=FALSE)
+```{r}
+inTrain <- createDataPartition(y=training$classe,p=0.25, list=FALSE)
 training_train <- training[inTrain,]
 training_test <- training[-inTrain,]
 ```
 
 Once the training data set has been split, run the random forest prediction model. This model was selected due to its high accuracy level.
-```{r, echo=FALSE}
+```{r}
 modFit <- train(classe~ .,data=training_train,method="rf",prox=TRUE)
 #modFit
 print(modFit$finalModel)
 ```
 
 As you can see from the output of the modFit$finalModel command the expected accuracy of the model is very high. As first trial of the prediction model apply the prediction model on the test sub data set, plot the result and check its accuracy level.  
-```{r, echo=FALSE}
+```{r}
 pred <- predict(modFit,training_test)
 training_test$predRight <- pred == training_test$classe
 table(pred,training_test$classe)
@@ -63,7 +64,7 @@ confusionMatrix(pred, training_test$classe)
 ```
 
 As the final trial apply the prediction model on the original testing data set (20 records) and append the data set with the predicted value of the classe column.  
-```{r, echo=FALSE}
+```{r}
 pred_test <- predict(modFit,testing)
 testing$classe <- pred_test
 table(pred_test,testing$classe)
